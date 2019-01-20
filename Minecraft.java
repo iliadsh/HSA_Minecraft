@@ -1,3 +1,7 @@
+package net.pickle;
+//package net.pickle;
+
+
 import java.awt.*;
 import hsa.Console;
 import java.util.*;
@@ -20,8 +24,12 @@ public class ThreeDEngine
     static float movex, movey, movez = 0;
     static InputLoop loop;
     static Vector3 cam = new Vector3 (0, 0, 0);
+    static Vector3 lookDir = new Vector3();
+    static float camyaw = 0;
+    static float campitch = 0;
     static float thetax = 0;
     static float thetaz = 0;
+    static float thetay = 0;
     static boolean showWireFrame = false;
 
 
@@ -74,7 +82,7 @@ public class ThreeDEngine
             clear (g);
             g.setColor (Color.black);
 
-            Mat4x4 matRotZ = new Mat4x4 (), matRotX = new Mat4x4 (), matTrans = new Mat4x4(), matWorld = new Mat4x4();
+            Mat4x4 matRotZ = new Mat4x4 (), matRotX = new Mat4x4 (), matRotY = new Mat4x4(), matTrans = new Mat4x4(), matWorld = new Mat4x4();
 
             // Rotation Z
             matRotZ = Mat4x4.makeRotationZ(thetaz);
@@ -82,13 +90,29 @@ public class ThreeDEngine
             // Rotation X
             matRotX = Mat4x4.makeRotationX(thetax * 0.5f);
             
+            // Rotation Y
+            matRotY = Mat4x4.makeRotationY(thetay);
+            
             // Translation
             matTrans = Mat4x4.makeTranslation(0 + movex, 0 + movey, 3 + movez);
             
             // Matworld
             matWorld = Mat4x4.makeIdentity();
             matWorld = Mat4x4.multiplyMatrix(matRotZ, matRotX);
+            matWorld = Mat4x4.multiplyMatrix(matWorld, matRotY);
             matWorld = Mat4x4.multiplyMatrix(matWorld, matTrans);
+            
+            Vector3 up = new Vector3(0, 1, 0);
+            Vector3 target = new Vector3(0, 0, 1);
+            Mat4x4 matCameraRotY = Mat4x4.makeRotationY(camyaw);
+            Mat4x4 matCameraRotX = Mat4x4.makeRotationX(campitch * 0.5f);
+            Mat4x4 matCameraRot = Mat4x4.multiplyMatrix(matCameraRotY, matCameraRotX);
+            lookDir = Vector3.MultiplyMatrixVector(target, matCameraRot);
+            target = Vector3.add(cam, lookDir);
+            
+            Mat4x4 matCamera = Mat4x4.pointAt(cam, target, up);
+            
+            Mat4x4 matView = Mat4x4.quickInverse(matCamera);
             
 
             ArrayList drawTris = new ArrayList ();
@@ -99,6 +123,7 @@ public class ThreeDEngine
 
                 Triangle triProjected = new Triangle ();
                 Triangle triTransformed = new Triangle ();
+                Triangle triViewed = new Triangle();
 
                 triTransformed.p[0] = Vector3.MultiplyMatrixVector(row.p[0], matWorld);
                 triTransformed.p[1] = Vector3.MultiplyMatrixVector(row.p[1], matWorld);
@@ -115,20 +140,24 @@ public class ThreeDEngine
 
                 
                 Vector3 vCamRay = Vector3.sub(triTransformed.p[0], cam);
+                
+                triViewed.p[0] = Vector3.MultiplyMatrixVector(triTransformed.p[0], matView);
+                triViewed.p[1] = Vector3.MultiplyMatrixVector(triTransformed.p[1], matView);
+                triViewed.p[2] = Vector3.MultiplyMatrixVector(triTransformed.p[2], matView);
 
-                if (Vector3.dotProduct(normal, vCamRay) < 0 && triTransformed.p [0].z > 0 && triTransformed.p [1].z > 0 && triTransformed.p [2].z > 0)
+                if (Vector3.dotProduct(normal, vCamRay) < 0 && triViewed.p [0].z > 0 && triViewed.p [1].z > 0 && triViewed.p [2].z > 0)
                 {
 
-                    Vector3 light_direction = new Vector3 (0, 0, -1);
+                    Vector3 light_direction = new Vector3 (0, -1, -1);
                     light_direction = Vector3.normalise(light_direction);
                     
                     float dp = Vector3.dotProduct(light_direction, normal);
 
                     Color c1 = getShadedColor (row.color, dp);
 
-                    triProjected.p [0] = Vector3.MultiplyMatrixVector (triTransformed.p [0], matProj);
-                    triProjected.p [1] = Vector3.MultiplyMatrixVector (triTransformed.p [1], matProj);
-                    triProjected.p [2] = Vector3.MultiplyMatrixVector (triTransformed.p [2], matProj);
+                    triProjected.p [0] = Vector3.MultiplyMatrixVector (triViewed.p [0], matProj);
+                    triProjected.p [1] = Vector3.MultiplyMatrixVector (triViewed.p [1], matProj);
+                    triProjected.p [2] = Vector3.MultiplyMatrixVector (triViewed.p [2], matProj);
                     triProjected.color = c1;
                     
                     
@@ -468,7 +497,7 @@ class Mat4x4
 		float fFovRad = (float)(1.0f / Math.tan(fFovDegrees * 0.5f / 180.0f * Math.PI));
 		Mat4x4 matrix  = new Mat4x4();
 		matrix.m[0][0] = fAspectRatio * fFovRad;
-		matrix.m[1][1] = fFovRad;
+		matrix.m[1][1] = -fFovRad;
 		matrix.m[2][2] = fFar / (fFar - fNear);
 		matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
 		matrix.m[2][3] = 1.0f;
@@ -484,6 +513,38 @@ class Mat4x4
 			for (int r = 0; r < 4; r++)
 				matrix.m[r][c] = m1.m[r][0] * m2.m[0][c] + m1.m[r][1] * m2.m[1][c] + m1.m[r][2] * m2.m[2][c] + m1.m[r][3] * m2.m[3][c];
 		}
+		return matrix;
+	}
+	
+	public static Mat4x4 pointAt(Vector3 pos, Vector3 target, Vector3 up) 
+	{
+		Vector3 newForward = Vector3.sub(target, pos);
+		newForward = Vector3.normalise(newForward);
+
+		Vector3 a = Vector3.mul(newForward, Vector3.dotProduct(up, newForward));
+		Vector3 newUp = Vector3.sub(up, a);
+		newUp = Vector3.normalise(newUp);
+
+		Vector3 newRight = Vector3.crossProduct(newUp, newForward);
+
+		Mat4x4 matrix = new Mat4x4();
+		matrix.m[0][0] = newRight.x;	matrix.m[0][1] = newRight.y;	matrix.m[0][2] = newRight.z;	matrix.m[0][3] = 0.0f;
+		matrix.m[1][0] = newUp.x;		matrix.m[1][1] = newUp.y;		matrix.m[1][2] = newUp.z;		matrix.m[1][3] = 0.0f;
+		matrix.m[2][0] = newForward.x;	matrix.m[2][1] = newForward.y;	matrix.m[2][2] = newForward.z;	matrix.m[2][3] = 0.0f;
+		matrix.m[3][0] = pos.x;			matrix.m[3][1] = pos.y;			matrix.m[3][2] = pos.z;			matrix.m[3][3] = 1.0f;
+		return matrix;
+	}
+	
+	public static Mat4x4 quickInverse(Mat4x4 m) 
+	{
+		Mat4x4 matrix = new Mat4x4();
+		matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
+		matrix.m[1][0] = m.m[0][1]; matrix.m[1][1] = m.m[1][1]; matrix.m[1][2] = m.m[2][1]; matrix.m[1][3] = 0.0f;
+		matrix.m[2][0] = m.m[0][2]; matrix.m[2][1] = m.m[1][2]; matrix.m[2][2] = m.m[2][2]; matrix.m[2][3] = 0.0f;
+		matrix.m[3][0] = -(m.m[3][0] * matrix.m[0][0] + m.m[3][1] * matrix.m[1][0] + m.m[3][2] * matrix.m[2][0]);
+		matrix.m[3][1] = -(m.m[3][0] * matrix.m[0][1] + m.m[3][1] * matrix.m[1][1] + m.m[3][2] * matrix.m[2][1]);
+		matrix.m[3][2] = -(m.m[3][0] * matrix.m[0][2] + m.m[3][1] * matrix.m[1][2] + m.m[3][2] * matrix.m[2][2]);
+		matrix.m[3][3] = 1.0f;
 		return matrix;
 	}
 	
@@ -518,55 +579,48 @@ class InputLoop implements Runnable
         while (true)
         {
             CurrentKey = ThreeDEngine.c.getChar ();
-            if (CurrentKey == 'w')
-            {
-                ThreeDEngine.movez += (float) 1.05;
+            if (CurrentKey == 'q') {
+            	ThreeDEngine.cam.y -= 0.1f;
             }
-            if (CurrentKey == 's')
-            {
-                ThreeDEngine.movez -= (float) 1.05;
+            if (CurrentKey == 'e') {
+            	ThreeDEngine.cam.y += 0.1f;
             }
-            if (CurrentKey == 'a')
-            {
-                ThreeDEngine.movex -= (float) 1.05;
+            
+            Vector3 forward = Vector3.mul(ThreeDEngine.lookDir, 0.1f);
+            
+            Vector3 a = Vector3.mul(forward, Vector3.dotProduct(new Vector3(0, 1, 0), forward));
+    		Vector3 newUp = Vector3.sub(new Vector3(0, 1, 0), a);
+    		newUp = Vector3.normalise(newUp);
+
+    		Vector3 newRight = Vector3.crossProduct(newUp, forward);
+            
+            if (CurrentKey == 'w') {
+            	ThreeDEngine.cam = Vector3.add(ThreeDEngine.cam, forward);
+            
             }
-            if (CurrentKey == 'd')
-            {
-                ThreeDEngine.movex += (float) 1.05;
+            if (CurrentKey == 's') {
+            	ThreeDEngine.cam = Vector3.sub(ThreeDEngine.cam, forward);
+            
             }
-            if (CurrentKey == 'e')
-            {
-                ThreeDEngine.movey -= (float) 1.05;
+            if (CurrentKey == 'd') {
+            	ThreeDEngine.cam = Vector3.add(ThreeDEngine.cam, newRight);
+            
             }
-            if (CurrentKey == 'q')
-            {
-                ThreeDEngine.movey += (float) 1.05;
+            if (CurrentKey == 'a') {
+            	ThreeDEngine.cam = Vector3.sub(ThreeDEngine.cam, newRight);
+            
             }
-            if (CurrentKey == 'l')
-            {
-                ThreeDEngine.thetax -= (float) 0.1;
+            if (CurrentKey == 'j') {
+            	ThreeDEngine.camyaw += 0.1f;
             }
-            if (CurrentKey == 'j')
-            {
-                ThreeDEngine.thetax += (float) 0.1;
+            if (CurrentKey == 'l') {
+            	ThreeDEngine.camyaw -= 0.1f;
             }
-            if (CurrentKey == 'i')
-            {
-                ThreeDEngine.thetaz -= (float) 0.1;
+            if (CurrentKey == 'i') {
+            	ThreeDEngine.campitch -= 0.1f;
             }
-            if (CurrentKey == 'k')
-            {
-                ThreeDEngine.thetaz += (float) 0.1;
-            }
-            if (CurrentKey == 'o')
-            {
-                ThreeDEngine.fov += (float) 1;
-                ThreeDEngine.updateProjectionMat();
-            }
-            if (CurrentKey == 'p')
-            {
-                ThreeDEngine.fov -= (float) 1;
-                ThreeDEngine.updateProjectionMat();
+            if (CurrentKey == 'k') {
+            	ThreeDEngine.campitch += 0.1f;
             }
             if (CurrentKey == 't')
             {
