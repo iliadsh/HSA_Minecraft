@@ -19,19 +19,95 @@ public class ThreeDEngine
     static Random r = new Random ();
     static float movex, movey, movez = 0;
     static InputLoop loop;
-    static Vector3 cam = new Vector3 (0, 0, 0);
+    static Vector3 cam = new Vector3 (10f, -3, 0);
     static Vector3 lookDir = new Vector3();
     static float camyaw = 0;
     static float campitch = 0;
     static float thetax = 0;
     static float thetaz = 0;
     static float thetay = 0;
-    static boolean showWireFrame = false;
+    static boolean showWireFrame = true;
+    static Block[][][] blocks = new Block[20][20][20];
+    static boolean shouldUpdate = false;
 
 
     public static void updateProjectionMat ()
     {
     	 matProj = Mat4x4.makeProjection(fov, aspectRatio, zNear, zFar);
+    }
+    
+    public static void drawCrosshair() {
+    	int x = c.getWidth() / 2;
+    	int y = c.getHeight() / 2;
+    	g.setColor(Color.black);
+    	g.fillRect(x - 2, y - 2, 4, 4);
+    }
+    
+    public static void updateChunk() {
+    	cube.tris = new ArrayList();
+        for (int i = 0; i < 20; i++) {
+            for (int k = 0; k < 20; k++) {
+                for (int j = 0; j < 20; j++) {
+                try {
+                if (blocks[i][k][j].id != 0) {
+                    try {
+                    if (blocks[i + 1][k][j].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                    }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                    }
+                    try {
+                        if (blocks[i - 1][k][j].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                    }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                    }
+                    try {
+                        if (blocks[i][k + 1][j].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                    }
+                    try {
+                        if (blocks[i][k - 1][j].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                    }
+                    try {
+                        if (blocks[i][k][j - 1].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                    }
+                    try {
+                        if (blocks[i][k][j + 1].id == 0) {
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                        }
+                    } catch (Exception e){
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                    }
+                }}catch (Exception e) {}} 
+                
+            }
+        }
     }
     
 
@@ -48,11 +124,46 @@ public class ThreeDEngine
         aspectRatio = (float) c.getHeight () / (float) c.getWidth ();
 
         updateProjectionMat();
+        
+        for (int i = 0; i < 20; i++) {
+        	for (int k = 9; k < 20; k++) {
+        		for (int j = 0; j < 20; j++) {
+        			if (k < 11) {
+        				blocks[i][k][j] = new Block(1);
+        			} else {
+        				blocks[i][k][j] = new Block(2);
+        				
+        			}
+        		}
+        	}
+        
+        }
+        
+        blocks[10][8][10] = new Block(3);
+        blocks[10][7][10] = new Block(3);
+        blocks[10][6][10] = new Block(3);
+        
+        blocks[10][5][10] = new Block(4);
+        blocks[10][4][10] = new Block(4);
+        
+        blocks[11][5][10] = new Block(4);
+        blocks[11][4][10] = new Block(4);
+        
+        blocks[9][5][10] = new Block(4);
+        blocks[9][4][10] = new Block(4);
+        
+        blocks[10][5][11] = new Block(4);
+        blocks[10][4][11] = new Block(4);
+        
+        blocks[10][5][9] = new Block(4);
+        blocks[10][4][9] = new Block(4);
+        
+        updateChunk();
        
 
         //cube.loadFromFile ("teapot.obj");
 
-        cube.tris = new ArrayList();
+        /*cube.tris = new ArrayList();
 
         //SOUTH
         cube.tris.add(new Triangle(new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0), Color.green));
@@ -71,10 +182,14 @@ public class ThreeDEngine
         cube.tris.add(new Triangle(new Vector3(0, 1, 0), new Vector3(1, 1, 1), new Vector3(1, 1, 0), Color.green));
         //BOTTOM
         cube.tris.add(new Triangle(new Vector3(1, 0, 1), new Vector3(0, 0, 1), new Vector3(0, 0, 0), Color.green));
-        cube.tris.add(new Triangle(new Vector3(1, 0, 1), new Vector3(0, 0, 0), new Vector3(1, 0, 0), Color.green));
+        cube.tris.add(new Triangle(new Vector3(1, 0, 1), new Vector3(0, 0, 0), new Vector3(1, 0, 0), Color.green));*/
 
         while (true)
         {
+        	if (shouldUpdate) {
+        		updateChunk();
+        		shouldUpdate = false;
+        	}
             clear (g);
             g.setColor (Color.black);
 
@@ -102,7 +217,7 @@ public class ThreeDEngine
             Vector3 target = new Vector3(0, 0, 1);
             Mat4x4 matCameraRotY = Mat4x4.makeRotationY(camyaw);
             Mat4x4 matCameraRotX = Mat4x4.makeRotationX(campitch * 0.5f);
-            Mat4x4 matCameraRot = Mat4x4.multiplyMatrix(matCameraRotY, matCameraRotX);
+            Mat4x4 matCameraRot = Mat4x4.multiplyMatrix(matCameraRotX, matCameraRotY);
             lookDir = Vector3.MultiplyMatrixVector(target, matCameraRot);
             target = Vector3.add(cam, lookDir);
             
@@ -205,6 +320,8 @@ public class ThreeDEngine
                     g.drawPolygon (xs, ys, ys.length);
             }
 
+            drawCrosshair();
+            
             c.drawImage (gc, 0, 0, null);
         }
 
@@ -564,6 +681,36 @@ class Sortbydistance implements Comparator
     }
 }
 
+class Block {
+    public int id;
+    public Color c;
+    private void setupColor() {
+    	if (this.id == 1) {
+    		this.c = Color.green;
+    	}
+    	else if (this.id == 2) {
+    		this.c = new Color(117, 58, 7);
+    	}
+    	else if (this.id == 3) {
+    		this.c = new Color(48, 23, 1);
+    	}
+    	else if (this.id == 4) {
+    		this.c = new Color(3, 48, 1);
+    	}
+    	else {
+    		this.c = Color.black;
+    	}
+    }
+    public Block() {
+        this.id = 0;
+        setupColor();
+    }
+    public Block(int id) {
+        this.id = id;
+        setupColor();
+    }
+}
+
 class InputLoop implements Runnable
 {
     private Thread t;
@@ -617,6 +764,26 @@ class InputLoop implements Runnable
             }
             if (CurrentKey == 'k') {
             	ThreeDEngine.campitch += 0.1f;
+            }
+            if (CurrentKey == ' ') {
+            	Vector3 cast = new Vector3(ThreeDEngine.cam.x, ThreeDEngine.cam.y, ThreeDEngine.cam.z);
+            	Vector3 castDir = new Vector3(ThreeDEngine.lookDir.x, ThreeDEngine.lookDir.y, ThreeDEngine.lookDir.z);
+            
+            	Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
+            	
+            	for (int i  = 0; i < 40; i++) {
+            		Vector3 point = Vector3.add(cast, forwardCast);
+            		
+            		if (((int)point.x < ThreeDEngine.blocks.length && (int)point.x >= 0) && ((int)point.y < ThreeDEngine.blocks.length) && ((int)point.z < ThreeDEngine.blocks.length && (int)point.z >= 0)) {
+            			if (ThreeDEngine.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
+            				ThreeDEngine.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
+            				ThreeDEngine.shouldUpdate = true;
+            				break;
+            			}
+            			
+            		}
+            		cast = point;
+            	}
             }
             if (CurrentKey == 't')
             {
