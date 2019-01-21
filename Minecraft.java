@@ -1,7 +1,3 @@
-package net.pickle;
-//package net.pickle;
-
-
 import java.awt.*;
 import hsa.Console;
 import java.util.*;
