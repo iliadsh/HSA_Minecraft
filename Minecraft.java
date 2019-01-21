@@ -57,6 +57,12 @@ public class Minecraft
     	}
 		g.setColor(Color.green);
 		g.fillRect(1 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+		g.setColor(new Color(117, 58, 7));
+		g.fillRect(2 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+		g.setColor(new Color(48, 23, 1));
+		g.fillRect(3 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+		g.setColor(new Color(3, 48, 1));
+		g.fillRect(4 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
     }
     
     public static void updateChunk() {
@@ -785,10 +791,14 @@ class InputLoop implements Runnable
             	Minecraft.camyaw -= 0.1f;
             }
             if (CurrentKey == 'i') {
-            	Minecraft.campitch -= 0.1f;
+            	if (Minecraft.campitch > -3) {
+            		Minecraft.campitch -= 0.1f;
+            	}
             }
             if (CurrentKey == 'k') {
-            	Minecraft.campitch += 0.1f;
+            	if (Minecraft.campitch < 3) {
+            		Minecraft.campitch += 0.1f;
+            	}
             }
             if (CurrentKey == '1') {
             	Minecraft.selectedItem = 0;
@@ -796,30 +806,50 @@ class InputLoop implements Runnable
             if (CurrentKey == '2') {
             	Minecraft.selectedItem = 1;
             }
+            if (CurrentKey == '3') {
+            	Minecraft.selectedItem = 2;
+            }
+            if (CurrentKey == '4') {
+            	Minecraft.selectedItem = 3;
+            }
+            if (CurrentKey == '5') {
+            	Minecraft.selectedItem = 4;
+            }
             if (CurrentKey == ' ') {
-            	Vector3 cast = new Vector3(Minecraft.cam.x, Minecraft.cam.y - 1, Minecraft.cam.z - 3);
-            	Vector3 castDir = new Vector3(Minecraft.lookDir.x, Minecraft.lookDir.y, Minecraft.lookDir.z);
-            
-            	Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
-            	
-            	for (int i  = 0; i < 40; i++) {
-            		Vector3 point = Vector3.add(cast, forwardCast);
-            		
-            		if (((int)point.x < Minecraft.blocks.length && (int)point.x >= 0) && ((Math.abs((int)point.y) < Minecraft.blocks.length && Math.abs((int)point.y) >= 0)) && ((int)point.z < Minecraft.blocks.length && (int)point.z >= 0)) {
-            			if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
-            				if (Minecraft.selectedItem == 0) {
-            					Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
-            				} 
-            				else if (Minecraft.selectedItem == 1) {
-            					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(1);
-            				}
-            				Minecraft.shouldUpdate = true;
-            				break;
-            			}
-            			
-            		}
-            		cast = point;
-            	}
+            	try {
+            		Vector3 cast = new Vector3(Minecraft.cam.x, Minecraft.cam.y - 1, Minecraft.cam.z - 3);
+                	Vector3 castDir = new Vector3(Minecraft.lookDir.x, Minecraft.lookDir.y, Minecraft.lookDir.z);
+                
+                	Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
+                	
+                	for (int i  = 0; i < 40; i++) {
+                		Vector3 point = Vector3.add(cast, forwardCast);
+                		
+                		if (((int)point.x < Minecraft.blocks.length && (int)point.x >= 0) && ((Math.abs((int)point.y) < Minecraft.blocks.length && Math.abs((int)point.y) >= 0)) && ((int)point.z < Minecraft.blocks.length && (int)point.z >= 0)) {
+                			if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
+                				if (Minecraft.selectedItem == 0) {
+                					Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
+                				} 
+                				else if (Minecraft.selectedItem == 1) {
+                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(1);
+                				}
+                				else if (Minecraft.selectedItem == 2) {
+                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(2);
+                				}
+                				else if (Minecraft.selectedItem == 3) {
+                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(3);
+                				}
+                				else if (Minecraft.selectedItem == 4) {
+                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(4);
+                				}
+                				Minecraft.shouldUpdate = true;
+                				break;
+                			}
+                			
+                		}
+                		cast = point;
+                	}
+            	} catch (Exception e) {}
             }
             if (CurrentKey == 't')
             {
