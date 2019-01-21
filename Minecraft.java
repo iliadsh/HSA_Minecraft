@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
 
-public class ThreeDEngine
+public class Minecraft
 {
     static Console c;
     static BufferedImage gc;
@@ -29,6 +29,7 @@ public class ThreeDEngine
     static boolean showWireFrame = true;
     static Block[][][] blocks = new Block[20][20][20];
     static boolean shouldUpdate = false;
+    static int selectedItem = 0;
 
 
     public static void updateProjectionMat ()
@@ -41,6 +42,21 @@ public class ThreeDEngine
     	int y = c.getHeight() / 2;
     	g.setColor(Color.black);
     	g.fillRect(x - 2, y - 2, 4, 4);
+    }
+    
+    public static void drawHotbar() {
+    	for (int i = 0; i < 10; i++) {
+    		g.setColor(Color.white);
+    		g.fillRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
+    	}
+    	g.setColor(Color.blue);
+		g.fillRect(selectedItem * 50 + (c.getWidth() / 2 - 250) - 4, c.getHeight() - 80 - 4, 58, 58);
+		for (int i = 0; i < 10; i++) {
+    		g.setColor(Color.black);
+    		g.drawRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
+    	}
+		g.setColor(Color.green);
+		g.fillRect(1 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
     }
     
     public static void updateChunk() {
@@ -110,11 +126,32 @@ public class ThreeDEngine
         }
     }
     
+    public static void drawTree(int x, int y, int z) {
+    	blocks[10 + x][8 + y][10 + z] = new Block(3);
+        blocks[10 + x][7 + y][10 + z] = new Block(3);
+        blocks[10 + x][6 + y][10 + z] = new Block(3);
+        
+        blocks[10 + x][5 + y][10 + z] = new Block(4);
+        blocks[10 + x][4 + y][10 + z] = new Block(4);
+        
+        blocks[11 + x][5 + y][10 + z] = new Block(4);
+        blocks[11 + x][4 + y][10 + z] = new Block(4);
+        
+        blocks[9 + x][5 + y][10 + z] = new Block(4);
+        blocks[9 + x][4 + y][10 + z] = new Block(4);
+        
+        blocks[10 + x][5 + y][11 + z] = new Block(4);
+        blocks[10 + x][4 + y][11 + z] = new Block(4);
+        
+        blocks[10 + x][5 + y][9 + z] = new Block(4);
+        blocks[10 + x][4 + y][9 + z] = new Block(4);
+    }
+    
 
 
     public static void main (String[] args)
     {
-        c = new Console ();
+        c = new Console (40, 120);
         gc = new BufferedImage (c.getWidth (), c.getHeight (), BufferedImage.TYPE_INT_ARGB);
         g = gc.createGraphics ();
         loop = new InputLoop ();
@@ -139,24 +176,10 @@ public class ThreeDEngine
         
         }
         
-        blocks[10][8][10] = new Block(3);
-        blocks[10][7][10] = new Block(3);
-        blocks[10][6][10] = new Block(3);
-        
-        blocks[10][5][10] = new Block(4);
-        blocks[10][4][10] = new Block(4);
-        
-        blocks[11][5][10] = new Block(4);
-        blocks[11][4][10] = new Block(4);
-        
-        blocks[9][5][10] = new Block(4);
-        blocks[9][4][10] = new Block(4);
-        
-        blocks[10][5][11] = new Block(4);
-        blocks[10][4][11] = new Block(4);
-        
-        blocks[10][5][9] = new Block(4);
-        blocks[10][4][9] = new Block(4);
+        drawTree(0, 0, 0);
+        drawTree(-4, 0, -4);
+        drawTree(5, 0, -7);
+        drawTree(4, 0, 7);
         
         updateChunk();
        
@@ -192,6 +215,7 @@ public class ThreeDEngine
         	}
             clear (g);
             g.setColor (Color.black);
+            
 
             Mat4x4 matRotZ = new Mat4x4 (), matRotX = new Mat4x4 (), matRotY = new Mat4x4(), matTrans = new Mat4x4(), matWorld = new Mat4x4();
 
@@ -321,7 +345,8 @@ public class ThreeDEngine
             }
 
             drawCrosshair();
-            
+            g.drawString("" +  cam.x + ", " + cam.y + ", " + cam.z, 10, 10);
+            drawHotbar();
             c.drawImage (gc, 0, 0, null);
         }
 
@@ -721,15 +746,15 @@ class InputLoop implements Runnable
     {
         while (true)
         {
-            CurrentKey = ThreeDEngine.c.getChar ();
+            CurrentKey = Minecraft.c.getChar ();
             if (CurrentKey == 'q') {
-            	ThreeDEngine.cam.y -= 0.1f;
+            	Minecraft.cam.y -= 0.1f;
             }
             if (CurrentKey == 'e') {
-            	ThreeDEngine.cam.y += 0.1f;
+            	Minecraft.cam.y += 0.1f;
             }
             
-            Vector3 forward = Vector3.mul(ThreeDEngine.lookDir, 0.1f);
+            Vector3 forward = Vector3.mul(Minecraft.lookDir, 0.1f);
             
             Vector3 a = Vector3.mul(forward, Vector3.dotProduct(new Vector3(0, 1, 0), forward));
     		Vector3 newUp = Vector3.sub(new Vector3(0, 1, 0), a);
@@ -738,46 +763,57 @@ class InputLoop implements Runnable
     		Vector3 newRight = Vector3.crossProduct(newUp, forward);
             
             if (CurrentKey == 'w') {
-            	ThreeDEngine.cam = Vector3.add(ThreeDEngine.cam, forward);
+            	Minecraft.cam = Vector3.add(Minecraft.cam, forward);
             
             }
             if (CurrentKey == 's') {
-            	ThreeDEngine.cam = Vector3.sub(ThreeDEngine.cam, forward);
+            	Minecraft.cam = Vector3.sub(Minecraft.cam, forward);
             
             }
             if (CurrentKey == 'd') {
-            	ThreeDEngine.cam = Vector3.add(ThreeDEngine.cam, newRight);
+            	Minecraft.cam = Vector3.add(Minecraft.cam, newRight);
             
             }
             if (CurrentKey == 'a') {
-            	ThreeDEngine.cam = Vector3.sub(ThreeDEngine.cam, newRight);
+            	Minecraft.cam = Vector3.sub(Minecraft.cam, newRight);
             
             }
             if (CurrentKey == 'j') {
-            	ThreeDEngine.camyaw += 0.1f;
+            	Minecraft.camyaw += 0.1f;
             }
             if (CurrentKey == 'l') {
-            	ThreeDEngine.camyaw -= 0.1f;
+            	Minecraft.camyaw -= 0.1f;
             }
             if (CurrentKey == 'i') {
-            	ThreeDEngine.campitch -= 0.1f;
+            	Minecraft.campitch -= 0.1f;
             }
             if (CurrentKey == 'k') {
-            	ThreeDEngine.campitch += 0.1f;
+            	Minecraft.campitch += 0.1f;
+            }
+            if (CurrentKey == '1') {
+            	Minecraft.selectedItem = 0;
+            }
+            if (CurrentKey == '2') {
+            	Minecraft.selectedItem = 1;
             }
             if (CurrentKey == ' ') {
-            	Vector3 cast = new Vector3(ThreeDEngine.cam.x, ThreeDEngine.cam.y, ThreeDEngine.cam.z);
-            	Vector3 castDir = new Vector3(ThreeDEngine.lookDir.x, ThreeDEngine.lookDir.y, ThreeDEngine.lookDir.z);
+            	Vector3 cast = new Vector3(Minecraft.cam.x, Minecraft.cam.y - 1, Minecraft.cam.z - 3);
+            	Vector3 castDir = new Vector3(Minecraft.lookDir.x, Minecraft.lookDir.y, Minecraft.lookDir.z);
             
             	Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
             	
             	for (int i  = 0; i < 40; i++) {
             		Vector3 point = Vector3.add(cast, forwardCast);
             		
-            		if (((int)point.x < ThreeDEngine.blocks.length && (int)point.x >= 0) && ((int)point.y < ThreeDEngine.blocks.length) && ((int)point.z < ThreeDEngine.blocks.length && (int)point.z >= 0)) {
-            			if (ThreeDEngine.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
-            				ThreeDEngine.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
-            				ThreeDEngine.shouldUpdate = true;
+            		if (((int)point.x < Minecraft.blocks.length && (int)point.x >= 0) && ((Math.abs((int)point.y) < Minecraft.blocks.length && Math.abs((int)point.y) >= 0)) && ((int)point.z < Minecraft.blocks.length && (int)point.z >= 0)) {
+            			if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
+            				if (Minecraft.selectedItem == 0) {
+            					Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
+            				} 
+            				else if (Minecraft.selectedItem == 1) {
+            					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(1);
+            				}
+            				Minecraft.shouldUpdate = true;
             				break;
             			}
             			
@@ -787,7 +823,7 @@ class InputLoop implements Runnable
             }
             if (CurrentKey == 't')
             {
-                ThreeDEngine.showWireFrame = !ThreeDEngine.showWireFrame;
+                Minecraft.showWireFrame = !Minecraft.showWireFrame;
             }
         }
     }
