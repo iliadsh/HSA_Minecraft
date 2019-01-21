@@ -1,3 +1,7 @@
+package net.pickle;
+//package net.pickle;
+
+
 import java.awt.*;
 import hsa.Console;
 import java.util.*;
@@ -754,10 +758,22 @@ class InputLoop implements Runnable
         {
             CurrentKey = Minecraft.c.getChar ();
             if (CurrentKey == 'q') {
-            	Minecraft.cam.y -= 0.1f;
+            	if ((Math.abs(Minecraft.cam.y - 1.1f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
+            		if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 1.1f))][(int)Minecraft.cam.z - 3] == null) {
+            			Minecraft.cam.y -= 0.1f;
+            		}
+            	} else {
+            		Minecraft.cam.y -= 0.1f;
+            	}
             }
             if (CurrentKey == 'e') {
-            	Minecraft.cam.y += 0.1f;
+            	if ((Math.abs(Minecraft.cam.y - 0.9f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
+            		if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 0.9f))][(int)Minecraft.cam.z - 3] == null) {
+            			Minecraft.cam.y += 0.1f;
+            		}
+            	} else {
+            		Minecraft.cam.y += 0.1f;
+            	}
             }
             
             Vector3 forward = Vector3.mul(Minecraft.lookDir, 0.1f);
@@ -769,19 +785,50 @@ class InputLoop implements Runnable
     		Vector3 newRight = Vector3.crossProduct(newUp, forward);
             
             if (CurrentKey == 'w') {
-            	Minecraft.cam = Vector3.add(Minecraft.cam, forward);
-            
+            	Vector3 temp = Vector3.add(Minecraft.cam, forward);
+            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+            			Minecraft.cam = temp;
+            		}
+            	} else {
+            		Minecraft.cam = temp;
+            	}
             }
             if (CurrentKey == 's') {
-            	Minecraft.cam = Vector3.sub(Minecraft.cam, forward);
+            	Vector3 temp = Vector3.sub(Minecraft.cam, forward);
+            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+            			Minecraft.cam = temp;
+            		}
+            	} else {
+            		Minecraft.cam = temp;
+            	}
             
             }
             if (CurrentKey == 'd') {
-            	Minecraft.cam = Vector3.add(Minecraft.cam, newRight);
+            	Vector3 temp = Vector3.add(Minecraft.cam, newRight);
+            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+            			Minecraft.cam = temp;
+            		}
+            	} else {
+            		Minecraft.cam = temp;
+            	}
             
             }
             if (CurrentKey == 'a') {
-            	Minecraft.cam = Vector3.sub(Minecraft.cam, newRight);
+            	Vector3 temp = Vector3.sub(Minecraft.cam, newRight);
+            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+            			Minecraft.cam = temp;
+            		}
+            	} else {
+            		Minecraft.cam = temp;
+            	}
             
             }
             if (CurrentKey == 'j') {
