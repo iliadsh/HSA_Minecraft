@@ -3,7 +3,7 @@ import hsa.Console;
 import java.util.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import javax.swing.*;
+import java.util.Timer;
 
 public class Minecraft
 {
@@ -30,43 +30,50 @@ public class Minecraft
     static Block[][][] blocks = new Block[20][20][20];
     static boolean shouldUpdate = false;
     static int selectedItem = 0;
+    static Vector3 sun = new Vector3(-1, 1, -1);
+    static Timer timer = new Timer();
+    static int fpsCount = 0;
+    static int fps = 0;
+    static int diamonds = 0;
 
 
     public static void updateProjectionMat ()
     {
-    	 matProj = Mat4x4.makeProjection(fov, aspectRatio, zNear, zFar);
+         matProj = Mat4x4.makeProjection(fov, aspectRatio, zNear, zFar);
     }
     
     public static void drawCrosshair() {
-    	int x = c.getWidth() / 2;
-    	int y = c.getHeight() / 2;
-    	g.setColor(Color.black);
-    	g.fillRect(x - 2, y - 2, 4, 4);
+        int x = c.getWidth() / 2;
+        int y = c.getHeight() / 2;
+        g.setColor(Color.black);
+        g.fillRect(x - 2, y - 2, 4, 4);
     }
     
     public static void drawHotbar() {
-    	for (int i = 0; i < 10; i++) {
-    		g.setColor(Color.white);
-    		g.fillRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
-    	}
-    	g.setColor(Color.blue);
-		g.fillRect(selectedItem * 50 + (c.getWidth() / 2 - 250) - 4, c.getHeight() - 80 - 4, 58, 58);
-		for (int i = 0; i < 10; i++) {
-    		g.setColor(Color.black);
-    		g.drawRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
-    	}
-		g.setColor(Color.green);
-		g.fillRect(1 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
-		g.setColor(new Color(117, 58, 7));
-		g.fillRect(2 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
-		g.setColor(new Color(48, 23, 1));
-		g.fillRect(3 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
-		g.setColor(new Color(3, 48, 1));
-		g.fillRect(4 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+        for (int i = 0; i < 10; i++) {
+                g.setColor(Color.white);
+                g.fillRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
+        }
+        g.setColor(Color.blue);
+                g.fillRect(selectedItem * 50 + (c.getWidth() / 2 - 250) - 4, c.getHeight() - 80 - 4, 58, 58);
+                for (int i = 0; i < 10; i++) {
+                g.setColor(Color.black);
+                g.drawRect(i * 50 + (c.getWidth() / 2 - 250), c.getHeight() - 80, 50, 50);
+        }
+                g.setColor(Color.green);
+                g.fillRect(1 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+                g.setColor(new Color(117, 58, 7));
+                g.fillRect(2 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+                g.setColor(new Color(48, 23, 1));
+                g.fillRect(3 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+                g.setColor(new Color(3, 48, 1));
+                g.fillRect(4 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
+                g.setColor(new Color(244, 232, 2));
+                g.fillRect(5 * 50 + (c.getWidth() / 2 - 250) + 10, c.getHeight() - 80 + 10, 30, 30);
     }
     
     public static void updateChunk() {
-    	cube.tris = new ArrayList();
+        cube.tris = new ArrayList();
         for (int i = 0; i < 20; i++) {
             for (int k = 0; k < 20; k++) {
                 for (int j = 0; j < 20; j++) {
@@ -75,56 +82,56 @@ public class Minecraft
                     try {
                     if (blocks[i + 1][k][j].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c, 1));
                     }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 0 - k, 1 + j), blocks[i][k][j].c, 1));
                     }
                     try {
                         if (blocks[i - 1][k][j].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                     }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                     }
                     try {
                         if (blocks[i][k + 1][j].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                         }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                     }
                     try {
                         if (blocks[i][k - 1][j].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c, 1));
                         }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c, 1));
                     }
                     try {
                         if (blocks[i][k][j - 1].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                         }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(0 + i, 1 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(0 + i, 0 - k, 0 + j), new Vector3(1 + i, 1 - k, 0 + j), new Vector3(1 + i, 0 - k, 0 + j), blocks[i][k][j].c, 1));
                     }
                     try {
                         if (blocks[i][k][j + 1].id == 0) {
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c, 1));
                         }
                     } catch (Exception e){
                         cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(1 + i, 1 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), blocks[i][k][j].c));
-                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c));
+                        cube.tris.add(new Triangle(new Vector3(1 + i, 0 - k, 1 + j), new Vector3(0 + i, 1 - k, 1 + j), new Vector3(0 + i, 0 - k, 1 + j), blocks[i][k][j].c, 1));
                     }
                 }}catch (Exception e) {}} 
                 
@@ -133,31 +140,69 @@ public class Minecraft
     }
     
     public static void drawTree(int x, int y, int z) {
-    	blocks[10 + x][8 + y][10 + z] = new Block(3);
-        blocks[10 + x][7 + y][10 + z] = new Block(3);
-        blocks[10 + x][6 + y][10 + z] = new Block(3);
+        int i = r.nextInt(2) - 1;
+        blocks[x][8 + y][z] = new Block(3);
+        blocks[x][7 + y][z] = new Block(3);
+        blocks[x][6 + y][z] = new Block(3);
+        blocks[x][6 + y - i][z] = new Block(3);
         
-        blocks[10 + x][5 + y][10 + z] = new Block(4);
-        blocks[10 + x][4 + y][10 + z] = new Block(4);
+        blocks[x][5 + y - i][z] = new Block(4);
+        blocks[x][4 + y][z] = new Block(4);
         
-        blocks[11 + x][5 + y][10 + z] = new Block(4);
-        blocks[11 + x][4 + y][10 + z] = new Block(4);
+        blocks[x + 1][5 + y - i][z] = new Block(4);
+        blocks[x + 1][4 + y - i][z] = new Block(4);
         
-        blocks[9 + x][5 + y][10 + z] = new Block(4);
-        blocks[9 + x][4 + y][10 + z] = new Block(4);
+        blocks[x - 1][5 + y - i][z] = new Block(4);
+        blocks[x - 1][4 + y - i][z] = new Block(4);
         
-        blocks[10 + x][5 + y][11 + z] = new Block(4);
-        blocks[10 + x][4 + y][11 + z] = new Block(4);
+        blocks[x][5 + y - i][z + 1] = new Block(4);
+        blocks[x][4 + y - i][z + 1] = new Block(4);
         
-        blocks[10 + x][5 + y][9 + z] = new Block(4);
-        blocks[10 + x][4 + y][9 + z] = new Block(4);
+        blocks[x][5 + y - i][z - 1] = new Block(4);
+        blocks[x][4 + y - i][z - 1] = new Block(4);
+    }
+    
+    public static void drawCloud() {
+        int x = r.nextInt(19);
+        int z = r.nextInt(19);
+        blocks[x][0][z] = new Block(5);
+    }
+    
+    public static void drawFeature() {
+        int height = r.nextInt(3);
+        int x = r.nextInt(19);
+        int z = r.nextInt(19);
+        if (height == 0) {
+            try {
+                blocks[x][9][z] = null;
+                blocks[x + 1][9][z] = null;
+                blocks[x + 1][9][z + 1] = null;
+                blocks[x][9][z + 1] = null;
+            } catch (Exception e) {}
+        }
+        if (height == 1) {
+            try {
+                blocks[x][8][z] = new Block(1);
+                blocks[x + 1][8][z] = new Block(1);
+                blocks[x + 1][8][z + 1] = new Block(1);
+                blocks[x][8][z + 1] = new Block(1);
+            } catch (Exception e) {}
+        }
+        if (height == 2) {
+            try {
+                blocks[x][9][z] = new Block(6);
+                blocks[x + 1][9][z] = new Block(6);
+                blocks[x + 1][9][z + 1] = new Block(6);
+                blocks[x][9][z + 1] = new Block(6);
+            } catch (Exception e) {}
+        }
     }
     
 
 
     public static void main (String[] args)
     {
-        c = new Console (40, 120);
+        c = new Console (38, 180);
         gc = new BufferedImage (c.getWidth (), c.getHeight (), BufferedImage.TYPE_INT_ARGB);
         g = gc.createGraphics ();
         loop = new InputLoop ();
@@ -165,27 +210,47 @@ public class Minecraft
         cube = new Mesh ();
         matProj = new Mat4x4 ();
         aspectRatio = (float) c.getHeight () / (float) c.getWidth ();
+        timer.scheduleAtFixedRate(new fpsTimer(), 1000, 1000);
 
         updateProjectionMat();
         
         for (int i = 0; i < 20; i++) {
-        	for (int k = 9; k < 20; k++) {
-        		for (int j = 0; j < 20; j++) {
-        			if (k < 11) {
-        				blocks[i][k][j] = new Block(1);
-        			} else {
-        				blocks[i][k][j] = new Block(2);
-        				
-        			}
-        		}
-        	}
+                for (int k = 9; k < 20; k++) {
+                        for (int j = 0; j < 20; j++) {
+                                if (k < 11) {
+                                        blocks[i][k][j] = new Block(1);
+                                } else {
+                                        int a = r.nextInt(20);
+                                        if (a == 2) {
+                                            blocks[i][k][j] = new Block(7);
+                                        } else {
+                                            blocks[i][k][j] = new Block(2);
+                                        }
+                                        
+                                        
+                                }
+                        }
+                }
         
         }
+
         
-        drawTree(0, 0, 0);
-        drawTree(-4, 0, -4);
-        drawTree(5, 0, -7);
-        drawTree(4, 0, 7);
+        for (int i = r.nextInt(5); i < 25; i++) {
+            drawCloud();
+        }
+        
+        for (int i = r.nextInt(5); i < 35; i++) {
+            drawFeature();
+        }
+        
+        for (int i = r.nextInt(2); i < 12; i++) {
+            int x = r.nextInt(17);
+            int z = r.nextInt(17);
+            try {
+                drawTree(x, 0, z);
+            } catch (Exception e) {}
+        }
+        
         
         updateChunk();
        
@@ -193,7 +258,6 @@ public class Minecraft
         //cube.loadFromFile ("teapot.obj");
 
         /*cube.tris = new ArrayList();
-
         //SOUTH
         cube.tris.add(new Triangle(new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0), Color.green));
         cube.tris.add(new Triangle(new Vector3(0, 0, 0), new Vector3(1, 1, 0), new Vector3(1, 0, 0), Color.green));
@@ -215,10 +279,11 @@ public class Minecraft
 
         while (true)
         {
-        	if (shouldUpdate) {
-        		updateChunk();
-        		shouldUpdate = false;
-        	}
+            fpsCount++;
+            if (shouldUpdate) {
+                 updateChunk();
+                 shouldUpdate = false;
+            }
             clear (g);
             g.setColor (Color.black);
             
@@ -289,8 +354,7 @@ public class Minecraft
                 if (Vector3.dotProduct(normal, vCamRay) < 0 && triViewed.p [0].z > 0 && triViewed.p [1].z > 0 && triViewed.p [2].z > 0)
                 {
 
-                    Vector3 light_direction = new Vector3 (0, -1, -1);
-                    light_direction = Vector3.normalise(light_direction);
+                    Vector3 light_direction = Vector3.normalise(sun);
                     
                     float dp = Vector3.dotProduct(light_direction, normal);
 
@@ -303,7 +367,7 @@ public class Minecraft
                     
                     
                     if (triProjected.p[0].w != 0 && triProjected.p[1].w != 0 && triProjected.p[2].w !=0) {
-                    	triProjected.p[0] = Vector3.div(triProjected.p[0], triProjected.p[0].w);
+                        triProjected.p[0] = Vector3.div(triProjected.p[0], triProjected.p[0].w);
                         triProjected.p[1] = Vector3.div(triProjected.p[1], triProjected.p[1].w);
                         triProjected.p[2] = Vector3.div(triProjected.p[2], triProjected.p[2].w);
                     }
@@ -322,6 +386,8 @@ public class Minecraft
                     triProjected.p [1].y *= 0.5 * (float) c.getHeight ();
                     triProjected.p [2].x *= 0.5 * (float) c.getWidth ();
                     triProjected.p [2].y *= 0.5 * (float) c.getHeight ();
+                    
+                    triProjected.num = row.num;
 
 
                     drawTris.add (triProjected);
@@ -346,12 +412,22 @@ public class Minecraft
                 g.setColor (triProjected.color);
                 g.fillPolygon (xs, ys, ys.length);
                 g.setColor (Color.black);
-                if (showWireFrame)
-                    g.drawPolygon (xs, ys, ys.length);
+                if (showWireFrame) {
+                    if (triProjected.num == 0) {
+                        g.drawLine(xs[0], ys[0], xs[1], ys[1]);
+                        g.drawLine(xs[1], ys[1], xs[2], ys[2]);
+                    } else {
+                        g.drawLine(xs[1], ys[1], xs[2], ys[2]);
+                        g.drawLine(xs[2], ys[2], xs[0], ys[0]);
+                    }
+                    
+                }
+                    //g.drawPolygon (xs, ys, ys.length);
             }
 
             drawCrosshair();
-            g.drawString("" +  cam.x + ", " + cam.y + ", " + cam.z, 10, 10);
+            g.drawString("FPS: " + fps, 10, 10);
+            g.drawString("Diamonds Mined: " + diamonds, 10, 30);
             drawHotbar();
             c.drawImage (gc, 0, 0, null);
         }
@@ -416,13 +492,10 @@ public class Minecraft
                 output = oc.brighter ().brighter ().brighter ().brighter ().brighter ().brighter ().brighter ().brighter ();
                 break;
             default:
-                output = oc.brighter ().brighter ().brighter ().brighter ().brighter ().brighter ().brighter ().brighter ().brighter ();
+                output = oc.darker().darker().darker();
         }
         return output;
     }
-
-
-    
 }
 
 class Vector3
@@ -497,6 +570,7 @@ class Vector3
 
 class Triangle
 {
+    public int num = 0;
     public Triangle ()
     {
         p [0] = new Vector3 ();
@@ -522,6 +596,15 @@ class Triangle
         p [2] = v3;
         this.color = color;
     }
+    
+    public Triangle (Vector3 v1, Vector3 v2, Vector3 v3, Color color, int i)
+    {
+        p [0] = v1;
+        p [1] = v2;
+        p [2] = v3;
+        this.color = color;
+        this.num = i;
+    }
 
 
     Vector3[] p = new Vector3 [3];
@@ -542,8 +625,6 @@ class Mesh
             String line = reader.readLine ();
             while (line != null)
             {
-                //System.out.println(line);
-                // read next line
                 String[] data = line.split (" ");
                 if (data [0].equals ("v"))
                 {
@@ -580,118 +661,118 @@ class Mat4x4
     float[] [] m = new float [4] [4];
     
     public static Mat4x4 makeIdentity() {
-    	Mat4x4 out = new Mat4x4();
-    	out.m[0][0] = 1;
-    	out.m[1][1] = 1;
-    	out.m[2][2] = 1;
-    	out.m[3][3] = 1;
-    	return out;
+        Mat4x4 out = new Mat4x4();
+        out.m[0][0] = 1;
+        out.m[1][1] = 1;
+        out.m[2][2] = 1;
+        out.m[3][3] = 1;
+        return out;
     }
     public static Mat4x4 makeRotationX(float fAngleRad)
-	{
-		Mat4x4 matrix = new Mat4x4();
-		matrix.m[0][0] = 1.0f;
-		matrix.m[1][1] = (float)Math.cos(fAngleRad);
-		matrix.m[1][2] = (float)Math.sin(fAngleRad);
-		matrix.m[2][1] = (float) - Math.sin(fAngleRad);
-		matrix.m[2][2] = (float)Math.cos(fAngleRad);
-		matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
+        {
+                Mat4x4 matrix = new Mat4x4();
+                matrix.m[0][0] = 1.0f;
+                matrix.m[1][1] = (float)Math.cos(fAngleRad);
+                matrix.m[1][2] = (float)Math.sin(fAngleRad);
+                matrix.m[2][1] = (float) - Math.sin(fAngleRad);
+                matrix.m[2][2] = (float)Math.cos(fAngleRad);
+                matrix.m[3][3] = 1.0f;
+                return matrix;
+        }
 
-	public static Mat4x4 makeRotationY(float fAngleRad)
-	{
-		Mat4x4 matrix = new Mat4x4();
-		matrix.m[0][0] = (float)Math.cos(fAngleRad);
-		matrix.m[0][2] = (float)Math.sin(fAngleRad);
-		matrix.m[2][0] = (float) - Math.sin(fAngleRad);
-		matrix.m[1][1] = 1.0f;
-		matrix.m[2][2] = (float)Math.cos(fAngleRad);
-		matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
+        public static Mat4x4 makeRotationY(float fAngleRad)
+        {
+                Mat4x4 matrix = new Mat4x4();
+                matrix.m[0][0] = (float)Math.cos(fAngleRad);
+                matrix.m[0][2] = (float)Math.sin(fAngleRad);
+                matrix.m[2][0] = (float) - Math.sin(fAngleRad);
+                matrix.m[1][1] = 1.0f;
+                matrix.m[2][2] = (float)Math.cos(fAngleRad);
+                matrix.m[3][3] = 1.0f;
+                return matrix;
+        }
 
-	public static Mat4x4 makeRotationZ(float fAngleRad)
-	{
-		Mat4x4 matrix = new Mat4x4();
-		matrix.m[0][0] = (float)Math.cos(fAngleRad);
-		matrix.m[0][1] = (float)Math.sin(fAngleRad);
-		matrix.m[1][0] = (float) - Math.sin(fAngleRad);
-		matrix.m[1][1] = (float)Math.cos(fAngleRad);
-		matrix.m[2][2] = 1.0f;
-		matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
-	
-	public static Mat4x4 makeTranslation(float x, float y, float z)
-	{
-		Mat4x4 matrix  = new Mat4x4();
-		matrix.m[0][0] = 1.0f;
-		matrix.m[1][1] = 1.0f;
-		matrix.m[2][2] = 1.0f;
-		matrix.m[3][3] = 1.0f;
-		matrix.m[3][0] = x;
-		matrix.m[3][1] = y;
-		matrix.m[3][2] = z;
-		return matrix;
-	}
+        public static Mat4x4 makeRotationZ(float fAngleRad)
+        {
+                Mat4x4 matrix = new Mat4x4();
+                matrix.m[0][0] = (float)Math.cos(fAngleRad);
+                matrix.m[0][1] = (float)Math.sin(fAngleRad);
+                matrix.m[1][0] = (float) - Math.sin(fAngleRad);
+                matrix.m[1][1] = (float)Math.cos(fAngleRad);
+                matrix.m[2][2] = 1.0f;
+                matrix.m[3][3] = 1.0f;
+                return matrix;
+        }
+        
+        public static Mat4x4 makeTranslation(float x, float y, float z)
+        {
+                Mat4x4 matrix  = new Mat4x4();
+                matrix.m[0][0] = 1.0f;
+                matrix.m[1][1] = 1.0f;
+                matrix.m[2][2] = 1.0f;
+                matrix.m[3][3] = 1.0f;
+                matrix.m[3][0] = x;
+                matrix.m[3][1] = y;
+                matrix.m[3][2] = z;
+                return matrix;
+        }
 
-	public static Mat4x4 makeProjection(float fFovDegrees, float fAspectRatio, float fNear, float fFar)
-	{
-		float fFovRad = (float)(1.0f / Math.tan(fFovDegrees * 0.5f / 180.0f * Math.PI));
-		Mat4x4 matrix  = new Mat4x4();
-		matrix.m[0][0] = fAspectRatio * fFovRad;
-		matrix.m[1][1] = -fFovRad;
-		matrix.m[2][2] = fFar / (fFar - fNear);
-		matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
-		matrix.m[2][3] = 1.0f;
-		matrix.m[3][3] = 0.0f;
-		return matrix;
-	}
+        public static Mat4x4 makeProjection(float fFovDegrees, float fAspectRatio, float fNear, float fFar)
+        {
+                float fFovRad = (float)(1.0f / Math.tan(fFovDegrees * 0.5f / 180.0f * Math.PI));
+                Mat4x4 matrix  = new Mat4x4();
+                matrix.m[0][0] = fAspectRatio * fFovRad;
+                matrix.m[1][1] = -fFovRad;
+                matrix.m[2][2] = fFar / (fFar - fNear);
+                matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
+                matrix.m[2][3] = 1.0f;
+                matrix.m[3][3] = 0.0f;
+                return matrix;
+        }
 
-	public static Mat4x4 multiplyMatrix(Mat4x4 m1, Mat4x4 m2)
-	{
-		Mat4x4 matrix = new Mat4x4();
-		for (int c = 0; c < 4; c++)
-		{
-			for (int r = 0; r < 4; r++)
-				matrix.m[r][c] = m1.m[r][0] * m2.m[0][c] + m1.m[r][1] * m2.m[1][c] + m1.m[r][2] * m2.m[2][c] + m1.m[r][3] * m2.m[3][c];
-		}
-		return matrix;
-	}
-	
-	public static Mat4x4 pointAt(Vector3 pos, Vector3 target, Vector3 up) 
-	{
-		Vector3 newForward = Vector3.sub(target, pos);
-		newForward = Vector3.normalise(newForward);
+        public static Mat4x4 multiplyMatrix(Mat4x4 m1, Mat4x4 m2)
+        {
+                Mat4x4 matrix = new Mat4x4();
+                for (int c = 0; c < 4; c++)
+                {
+                        for (int r = 0; r < 4; r++)
+                                matrix.m[r][c] = m1.m[r][0] * m2.m[0][c] + m1.m[r][1] * m2.m[1][c] + m1.m[r][2] * m2.m[2][c] + m1.m[r][3] * m2.m[3][c];
+                }
+                return matrix;
+        }
+        
+        public static Mat4x4 pointAt(Vector3 pos, Vector3 target, Vector3 up) 
+        {
+                Vector3 newForward = Vector3.sub(target, pos);
+                newForward = Vector3.normalise(newForward);
 
-		Vector3 a = Vector3.mul(newForward, Vector3.dotProduct(up, newForward));
-		Vector3 newUp = Vector3.sub(up, a);
-		newUp = Vector3.normalise(newUp);
+                Vector3 a = Vector3.mul(newForward, Vector3.dotProduct(up, newForward));
+                Vector3 newUp = Vector3.sub(up, a);
+                newUp = Vector3.normalise(newUp);
 
-		Vector3 newRight = Vector3.crossProduct(newUp, newForward);
+                Vector3 newRight = Vector3.crossProduct(newUp, newForward);
 
-		Mat4x4 matrix = new Mat4x4();
-		matrix.m[0][0] = newRight.x;	matrix.m[0][1] = newRight.y;	matrix.m[0][2] = newRight.z;	matrix.m[0][3] = 0.0f;
-		matrix.m[1][0] = newUp.x;		matrix.m[1][1] = newUp.y;		matrix.m[1][2] = newUp.z;		matrix.m[1][3] = 0.0f;
-		matrix.m[2][0] = newForward.x;	matrix.m[2][1] = newForward.y;	matrix.m[2][2] = newForward.z;	matrix.m[2][3] = 0.0f;
-		matrix.m[3][0] = pos.x;			matrix.m[3][1] = pos.y;			matrix.m[3][2] = pos.z;			matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
-	
-	public static Mat4x4 quickInverse(Mat4x4 m) 
-	{
-		Mat4x4 matrix = new Mat4x4();
-		matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
-		matrix.m[1][0] = m.m[0][1]; matrix.m[1][1] = m.m[1][1]; matrix.m[1][2] = m.m[2][1]; matrix.m[1][3] = 0.0f;
-		matrix.m[2][0] = m.m[0][2]; matrix.m[2][1] = m.m[1][2]; matrix.m[2][2] = m.m[2][2]; matrix.m[2][3] = 0.0f;
-		matrix.m[3][0] = -(m.m[3][0] * matrix.m[0][0] + m.m[3][1] * matrix.m[1][0] + m.m[3][2] * matrix.m[2][0]);
-		matrix.m[3][1] = -(m.m[3][0] * matrix.m[0][1] + m.m[3][1] * matrix.m[1][1] + m.m[3][2] * matrix.m[2][1]);
-		matrix.m[3][2] = -(m.m[3][0] * matrix.m[0][2] + m.m[3][1] * matrix.m[1][2] + m.m[3][2] * matrix.m[2][2]);
-		matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
-	
+                Mat4x4 matrix = new Mat4x4();
+                matrix.m[0][0] = newRight.x;    matrix.m[0][1] = newRight.y;    matrix.m[0][2] = newRight.z;    matrix.m[0][3] = 0.0f;
+                matrix.m[1][0] = newUp.x;               matrix.m[1][1] = newUp.y;               matrix.m[1][2] = newUp.z;               matrix.m[1][3] = 0.0f;
+                matrix.m[2][0] = newForward.x;  matrix.m[2][1] = newForward.y;  matrix.m[2][2] = newForward.z;  matrix.m[2][3] = 0.0f;
+                matrix.m[3][0] = pos.x;                 matrix.m[3][1] = pos.y;                 matrix.m[3][2] = pos.z;                 matrix.m[3][3] = 1.0f;
+                return matrix;
+        }
+        
+        public static Mat4x4 quickInverse(Mat4x4 m) 
+        {
+                Mat4x4 matrix = new Mat4x4();
+                matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
+                matrix.m[1][0] = m.m[0][1]; matrix.m[1][1] = m.m[1][1]; matrix.m[1][2] = m.m[2][1]; matrix.m[1][3] = 0.0f;
+                matrix.m[2][0] = m.m[0][2]; matrix.m[2][1] = m.m[1][2]; matrix.m[2][2] = m.m[2][2]; matrix.m[2][3] = 0.0f;
+                matrix.m[3][0] = -(m.m[3][0] * matrix.m[0][0] + m.m[3][1] * matrix.m[1][0] + m.m[3][2] * matrix.m[2][0]);
+                matrix.m[3][1] = -(m.m[3][0] * matrix.m[0][1] + m.m[3][1] * matrix.m[1][1] + m.m[3][2] * matrix.m[2][1]);
+                matrix.m[3][2] = -(m.m[3][0] * matrix.m[0][2] + m.m[3][1] * matrix.m[1][2] + m.m[3][2] * matrix.m[2][2]);
+                matrix.m[3][3] = 1.0f;
+                return matrix;
+        }
+        
 }
 
 class Sortbydistance implements Comparator
@@ -716,21 +797,30 @@ class Block {
     public int id;
     public Color c;
     private void setupColor() {
-    	if (this.id == 1) {
-    		this.c = Color.green;
-    	}
-    	else if (this.id == 2) {
-    		this.c = new Color(117, 58, 7);
-    	}
-    	else if (this.id == 3) {
-    		this.c = new Color(48, 23, 1);
-    	}
-    	else if (this.id == 4) {
-    		this.c = new Color(3, 48, 1);
-    	}
-    	else {
-    		this.c = Color.black;
-    	}
+        if (this.id == 1) {
+                this.c = Color.green;
+        }
+        else if (this.id == 2) {
+                this.c = new Color(117, 58, 7);
+        }
+        else if (this.id == 3) {
+                this.c = new Color(48, 23, 1);
+        }
+        else if (this.id == 4) {
+                this.c = new Color(3, 48, 1);
+        }
+        else if (this.id == 5) {
+                this.c = Color.white;
+        }
+        else if (this.id == 6) {
+                this.c = new Color(244, 232, 2);
+        }
+        else if (this.id == 7) {
+                this.c = Color.blue;
+        }
+        else {
+                this.c = Color.black;
+        }
     }
     public Block() {
         this.id = 0;
@@ -754,145 +844,166 @@ class InputLoop implements Runnable
         {
             CurrentKey = Minecraft.c.getChar ();
             if (CurrentKey == 'q') {
-            	if ((Math.abs(Minecraft.cam.y - 1.1f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
-            		if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 1.1f))][(int)Minecraft.cam.z - 3] == null) {
-            			Minecraft.cam.y -= 0.1f;
-            		}
-            	} else {
-            		Minecraft.cam.y -= 0.1f;
-            	}
+                if ((Minecraft.cam.x < Minecraft.blocks.length && Minecraft.cam.x> 0) && (Math.abs(Minecraft.cam.y - 1.1f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
+                        if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 1.1f))][(int)Minecraft.cam.z - 3] == null) {
+                                Minecraft.cam.y -= 0.1f;
+                        }
+                } else {
+                        Minecraft.cam.y -= 0.1f;
+                }
             }
             if (CurrentKey == 'e') {
-            	if ((Math.abs(Minecraft.cam.y - 0.9f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
-            		if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 0.9f))][(int)Minecraft.cam.z - 3] == null) {
-            			Minecraft.cam.y += 0.1f;
-            		}
-            	} else {
-            		Minecraft.cam.y += 0.1f;
-            	}
+                if ((Minecraft.cam.x < Minecraft.blocks.length && Minecraft.cam.x> 0) && (Math.abs(Minecraft.cam.y - 0.9f) < Minecraft.blocks.length) && (Minecraft.cam.z - 3 < Minecraft.blocks.length && Minecraft.cam.z - 3 > 0)) {
+                        if (Minecraft.blocks[(int)Minecraft.cam.x][(int)(Math.abs(Minecraft.cam.y - 0.9f))][(int)Minecraft.cam.z - 3] == null) {
+                                Minecraft.cam.y += 0.1f;
+                        }
+                } else {
+                        Minecraft.cam.y += 0.1f;
+                }
             }
             
             Vector3 forward = Vector3.mul(Minecraft.lookDir, 0.1f);
             
             Vector3 a = Vector3.mul(forward, Vector3.dotProduct(new Vector3(0, 1, 0), forward));
-    		Vector3 newUp = Vector3.sub(new Vector3(0, 1, 0), a);
-    		newUp = Vector3.normalise(newUp);
+                Vector3 newUp = Vector3.sub(new Vector3(0, 1, 0), a);
+                newUp = Vector3.normalise(newUp);
 
-    		Vector3 newRight = Vector3.crossProduct(newUp, forward);
+                Vector3 newRight = Vector3.crossProduct(newUp, forward);
             
             if (CurrentKey == 'w') {
-            	Vector3 temp = Vector3.add(Minecraft.cam, forward);
-            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
-            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
-            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
-            			Minecraft.cam = temp;
-            		}
-            	} else {
-            		Minecraft.cam = temp;
-            	}
+                Vector3 temp = Vector3.add(Minecraft.cam, forward);
+                Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+                if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+                        if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+                                Minecraft.cam = temp;
+                        }
+                } else {
+                        Minecraft.cam = temp;
+                }
             }
             if (CurrentKey == 's') {
-            	Vector3 temp = Vector3.sub(Minecraft.cam, forward);
-            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
-            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
-            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
-            			Minecraft.cam = temp;
-            		}
-            	} else {
-            		Minecraft.cam = temp;
-            	}
+                Vector3 temp = Vector3.sub(Minecraft.cam, forward);
+                Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+                if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+                        if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+                                Minecraft.cam = temp;
+                        }
+                } else {
+                        Minecraft.cam = temp;
+                }
             
             }
             if (CurrentKey == 'd') {
-            	Vector3 temp = Vector3.add(Minecraft.cam, newRight);
-            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
-            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
-            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
-            			Minecraft.cam = temp;
-            		}
-            	} else {
-            		Minecraft.cam = temp;
-            	}
+                Vector3 temp = Vector3.add(Minecraft.cam, newRight);
+                Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+                if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+                        if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+                                Minecraft.cam = temp;
+                        }
+                } else {
+                        Minecraft.cam = temp;
+                }
             
             }
             if (CurrentKey == 'a') {
-            	Vector3 temp = Vector3.sub(Minecraft.cam, newRight);
-            	Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
-            	if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
-            		if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
-            			Minecraft.cam = temp;
-            		}
-            	} else {
-            		Minecraft.cam = temp;
-            	}
+                Vector3 temp = Vector3.sub(Minecraft.cam, newRight);
+                Vector3 temp2 = new Vector3(temp.x, temp.y - 1, temp.z - 3);
+                if ((temp2.x < Minecraft.blocks.length && temp2.x > 0) && Math.abs(temp2.y) < Minecraft.blocks.length && (temp2.z < Minecraft.blocks.length && temp2.z > 0)) {
+                        if (Minecraft.blocks[(int)temp2.x][Math.abs((int)temp2.y)][(int)temp2.z] == null) {
+                                Minecraft.cam = temp;
+                        }
+                } else {
+                        Minecraft.cam = temp;
+                }
             
             }
             if (CurrentKey == 'j') {
-            	Minecraft.camyaw += 0.1f;
+                Minecraft.camyaw += 0.1f;
             }
             if (CurrentKey == 'l') {
-            	Minecraft.camyaw -= 0.1f;
+                Minecraft.camyaw -= 0.1f;
             }
             if (CurrentKey == 'i') {
-            	if (Minecraft.campitch > -3) {
-            		Minecraft.campitch -= 0.1f;
-            	}
+                if (Minecraft.campitch > -3) {
+                        Minecraft.campitch -= 0.1f;
+                }
             }
             if (CurrentKey == 'k') {
-            	if (Minecraft.campitch < 3) {
-            		Minecraft.campitch += 0.1f;
-            	}
+                if (Minecraft.campitch < 3) {
+                        Minecraft.campitch += 0.1f;
+                }
             }
             if (CurrentKey == '1') {
-            	Minecraft.selectedItem = 0;
+                Minecraft.selectedItem = 0;
             }
             if (CurrentKey == '2') {
-            	Minecraft.selectedItem = 1;
+                Minecraft.selectedItem = 1;
             }
             if (CurrentKey == '3') {
-            	Minecraft.selectedItem = 2;
+                Minecraft.selectedItem = 2;
             }
             if (CurrentKey == '4') {
-            	Minecraft.selectedItem = 3;
+                Minecraft.selectedItem = 3;
             }
             if (CurrentKey == '5') {
-            	Minecraft.selectedItem = 4;
+                Minecraft.selectedItem = 4;
+            }
+            if (CurrentKey == '6') {
+                Minecraft.selectedItem = 5;
+            }
+             if (CurrentKey == '7') {
+                Minecraft.selectedItem = 6;
             }
             if (CurrentKey == ' ') {
-            	try {
-            		Vector3 cast = new Vector3(Minecraft.cam.x, Minecraft.cam.y - 1, Minecraft.cam.z - 3);
-                	Vector3 castDir = new Vector3(Minecraft.lookDir.x, Minecraft.lookDir.y, Minecraft.lookDir.z);
+                try {
+                        Vector3 cast = new Vector3(Minecraft.cam.x, Minecraft.cam.y - 1, Minecraft.cam.z - 3);
+                        Vector3 castDir = new Vector3(Minecraft.lookDir.x, Minecraft.lookDir.y, Minecraft.lookDir.z);
                 
-                	Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
-                	
-                	for (int i  = 0; i < 40; i++) {
-                		Vector3 point = Vector3.add(cast, forwardCast);
-                		
-                		if (((int)point.x < Minecraft.blocks.length && (int)point.x >= 0) && ((Math.abs((int)point.y) < Minecraft.blocks.length && Math.abs((int)point.y) >= 0)) && ((int)point.z < Minecraft.blocks.length && (int)point.z >= 0)) {
-                			if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
-                				if (Minecraft.selectedItem == 0) {
-                					Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
-                				} 
-                				else if (Minecraft.selectedItem == 1) {
-                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(1);
-                				}
-                				else if (Minecraft.selectedItem == 2) {
-                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(2);
-                				}
-                				else if (Minecraft.selectedItem == 3) {
-                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(3);
-                				}
-                				else if (Minecraft.selectedItem == 4) {
-                					Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(4);
-                				}
-                				Minecraft.shouldUpdate = true;
-                				break;
-                			}
-                			
-                		}
-                		cast = point;
-                	}
-            	} catch (Exception e) {}
+                        Vector3 forwardCast = Vector3.mul(castDir, 0.1f);
+                        
+                        for (int i  = 0; i < 40; i++) {
+                                Vector3 point = Vector3.add(cast, forwardCast);
+                                
+                                if (((int)point.x < Minecraft.blocks.length && (int)point.x >= 0) && ((Math.abs((int)point.y) < Minecraft.blocks.length && Math.abs((int)point.y) >= 0)) && ((int)point.z < Minecraft.blocks.length && (int)point.z >= 0)) {
+                                        if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] != null) {
+                                                if (Minecraft.selectedItem == 0) {
+                                                        if (Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z].id == 7) {
+                                                            Minecraft.diamonds++;
+                                                        }
+                                                        Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
+                                                } 
+                                                else if (Minecraft.selectedItem == 1) {
+                                                        Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(1);
+                                                }
+                                                else if (Minecraft.selectedItem == 2) {
+                                                        Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(2);
+                                                }
+                                                else if (Minecraft.selectedItem == 3) {
+                                                        Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(3);
+                                                }
+                                                else if (Minecraft.selectedItem == 4) {
+                                                        Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(4);
+                                                }
+                                                else if (Minecraft.selectedItem == 5) {
+                                                        Minecraft.blocks[(int)cast.x][Math.abs((int)cast.y)][(int)cast.z] = new Block(6);
+                                                }
+                                                else if (Minecraft.selectedItem == 6) {
+                                                        try {
+                                                            Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z] = null;
+                                                            Minecraft.blocks[(int)point.x + 1][Math.abs((int)point.y)][(int)point.z] = null;
+                                                            Minecraft.blocks[(int)point.x - 1][Math.abs((int)point.y)][(int)point.z] = null;
+                                                            Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z + 1] = null;
+                                                            Minecraft.blocks[(int)point.x][Math.abs((int)point.y)][(int)point.z - 1] = null;
+                                                        } catch (Exception e) {}
+                                                }
+                                                Minecraft.shouldUpdate = true;
+                                                break;
+                                        }
+                                        
+                                }
+                                cast = point;
+                        }
+                } catch (Exception e) {}
             }
             if (CurrentKey == 't')
             {
@@ -912,4 +1023,9 @@ class InputLoop implements Runnable
     }
 }
 
-
+class fpsTimer extends TimerTask {
+    public void run() {
+        Minecraft.fps = Minecraft.fpsCount;
+        Minecraft.fpsCount = 0;
+    }
+}
